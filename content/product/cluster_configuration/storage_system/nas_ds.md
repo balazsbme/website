@@ -22,6 +22,56 @@ The scalability of this solution will be bound to the performance of your NAS se
 
 Using an NFS/NAS Datastore provides a straightforward solution for implementing thin provisioning for VMs, which is enabled by default when using the **qcow2** image format.
 
+## NFS Server Requirements
+
+Prepare an NFS server that exports a directory for the OpenNebula datastores.
+A minimal setup involves installing the NFS server packages and creating the
+exported directory. On a Debian/Ubuntu system this can be done with:
+
+```shell
+apt-get install nfs-kernel-server
+mkdir -p /srv/one_datastores
+```
+
+Add the export in `/etc/exports` (adjust the network range as needed):
+
+```shell
+/srv/one_datastores 192.168.150.0/24(rw,soft,intr,async)
+```
+
+Reload the configuration so the share is exported:
+
+```shell
+exportfs -ra
+```
+
+Ensure the directory is owned by the `oneadmin` user (UID/GID `9869`):
+
+```shell
+chown 9869:9869 /srv/one_datastores
+```
+
+You can verify the export from the Front-end with:
+
+```shell
+showmount -e <nfs_server>
+```
+
+Install the NFS client utilities on the Front-end and Hosts:
+
+```shell
+apt-get install nfs-common
+```
+
+Optionally, mount the share temporarily to perform a simple test:
+
+```shell
+mkdir /tmp/test_nfs
+mount -t nfs <nfs_server>:/srv/one_datastores /tmp/test_nfs
+touch /tmp/test_nfs/test && ls -l /tmp/test_nfs
+umount /tmp/test_nfs
+```
+
 Datastore setup can be done either manually or automatically:
 
 ## Manual Front-end Setup
